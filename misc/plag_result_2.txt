@@ -1,0 +1,19 @@
+- AtCoder ABC373 D — Hidden Weights  
+```text
+https://atcoder.jp/contests/abc373/tasks/abc373_d
+```
+
+- AtCoder ABC328 F — Good Set Query  
+```text
+https://atcoder.jp/contests/abc328/tasks/abc328_f
+```
+
+- AtCoder ABC280 F — Pay or Receive  
+```text
+https://atcoder.jp/contests/abc280/tasks/abc280_f
+```
+
+- Codeforces 434D — Nanami's Power Plant (difference constraints / constraint graph style)  
+```text
+https://codeforces.com/problemset/problem/434/D
+```

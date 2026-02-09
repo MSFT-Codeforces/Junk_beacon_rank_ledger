@@ -1,0 +1,174 @@
+## Problem: Permutation from Graph Differences
+
+A sequence \(p_1,p_2,\dots,p_n\) is a **permutation** if it contains each integer from \(1\) to \(n\) exactly once.
+
+You are given a **connected** undirected graph with \(n\) vertices and \(m\) edges. Each edge gives a constraint of the form
+
+\[
+p_v - p_u = w
+\]
+
+(where \(u\) and \(v\) are vertices, and \(w\) is an integer).
+
+Determine whether there exists a permutation \(p\) of length \(n\) that satisfies **all** constraints. If it exists, output the permutation; otherwise output `-1`.
+
+It can be proven that if a valid permutation exists, then it is **unique**.
+
+---
+
+### Input Format
+- The first line contains two integers \(n, m\) \((2 \le n \le 2\cdot 10^5,\; n-1 \le m \le 2\cdot 10^5)\).
+- The next \(m\) lines each contain three integers \(u, v, w\) meaning the constraint \(p_v - p_u = w\).  
+  \((1 \le u,v \le n,\; -10^9 \le w \le 10^9)\).
+
+The graph is guaranteed to be connected.
+
+---
+
+### Output Format
+- Print `-1` if no such permutation exists.
+- Otherwise print \(p_1, p_2, \dots, p_n\).
+
+---
+
+## Editorial
+
+### Key idea: compute relative values (potentials)
+Each constraint
+\[
+p_v - p_u = w
+\]
+implies
+\[
+p_v = p_u + w
+\]
+So if we know \(p_u\), we know \(p_v\). Over a connected graph, all values are determined **up to adding the same constant**.
+
+Define auxiliary values \(s_i\) such that we fix \(s_1 = 0\), and for every edge constraint we enforce:
+\[
+s_v = s_u + w
+\]
+We can compute all \(s_i\) with BFS/DFS:
+- store adjacency as:
+  - from \(u\) to \(v\) with \(+w\)
+  - from \(v\) to \(u\) with \(-w\)
+- when visiting an edge \((u\to v, w)\):
+  - if \(s_v\) is unset, set \(s_v = s_u + w\)
+  - else it must already equal \(s_u + w\); otherwise constraints are inconsistent ⇒ answer is `-1`.
+
+If consistent, then any solution \(p\) must be of the form
+\[
+p_i = s_i + X
+\]
+for some integer constant shift \(X\).
+
+---
+
+### Enforcing that \(p\) is a permutation
+We need \(\{p_i\} = \{1,2,\dots,n\}\).
+
+Since \(p_i = s_i + X\), shifting by a constant does not change distinctness, so:
+- \(p\) is a permutation ⇒ all \(s_i\) are distinct.
+
+Also, if \(\{s_i + X\} = \{1,\dots,n\}\), then:
+\[
+\max(s)+X = n,\quad \min(s)+X = 1
+\]
+Subtracting gives the necessary condition:
+\[
+\max(s) - \min(s) = n - 1
+\]
+
+Conversely, if:
+1) all \(s_i\) are distinct, and  
+2) \(\max(s) - \min(s) = n-1\),
+
+then the \(n\) distinct integers \(s_i\) fit into an interval of length \(n-1\), so they must be exactly the consecutive set:
+\[
+\{\min(s), \min(s)+1, \dots, \min(s)+n-1\}.
+\]
+Choosing the forced shift
+\[
+X = 1 - \min(s)
+\]
+gives
+\[
+p_i = s_i - \min(s) + 1,
+\]
+which is exactly a permutation of \(1..n\). This shift is unique, hence the permutation (if it exists) is unique.
+
+---
+
+### Complexity
+- BFS/DFS over the graph: \(O(n+m)\)
+- checking min/max and distinctness: \(O(n)\)
+- total: \(O(n+m)\), memory \(O(n+m)\).
+
+---
+
+## Reference Implementation (Python)
+
+```python
+import sys
+from collections import deque
+
+def solve() -> None:
+    data = sys.stdin.buffer.read().split()
+    n = int(data[0])
+    m = int(data[1])
+
+    adj = [[] for _ in range(n + 1)]
+    idx = 2
+    for _ in range(m):
+        u = int(data[idx])
+        v = int(data[idx + 1])
+        w = int(data[idx + 2])
+        idx += 3
+
+        # p_v - p_u = w  <=>  s_v = s_u + w
+        adj[u].append((v, w))
+        adj[v].append((u, -w))
+
+    s = [None] * (n + 1)
+    s[1] = 0
+    q = deque([1])
+
+    # Check consistency and compute potentials
+    while q:
+        u = q.popleft()
+        su = s[u]
+        for v, w in adj[u]:
+            expected = su + w
+            if s[v] is None:
+                s[v] = expected
+                q.append(v)
+            else:
+                if s[v] != expected:
+                    sys.stdout.write("-1")
+                    return
+
+    # Graph is guaranteed connected; still keep a safety check.
+    if any(s[i] is None for i in range(1, n + 1)):
+        sys.stdout.write("-1")
+        return
+
+    vals = s[1:]
+    mn = min(vals)
+    mx = max(vals)
+
+    # Must be n distinct integers spanning exactly length n-1
+    if mx - mn != n - 1:
+        sys.stdout.write("-1")
+        return
+    if len(set(vals)) != n:
+        sys.stdout.write("-1")
+        return
+
+    shift = 1 - mn
+    p = [x + shift for x in vals]  # becomes exactly 1..n
+
+    sys.stdout.write(" ".join(map(str, p)))
+
+if __name__ == "__main__":
+    solve()
+```

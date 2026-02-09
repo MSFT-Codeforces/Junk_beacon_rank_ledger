@@ -1,0 +1,9 @@
+# Metadata
+**Category:** - Coding
+**Topic:** - Competitive Programming
+**Subtopic:** - ["Graph Algorithms", "Graphs and Networks", "Stacks and Queues", "Hash Tables", "Algorithm Complexity and Big O Notation"]
+**Difficulty:** - Hard
+**Languages:** - Python
+**Number of Approaches:** - 4, ($O(n!\cdot m)$ -> $O(n^3)$ -> $O(nm)$ -> $O(n+m)$)
+**Number of Chains:** - 7
+**Model-Breaking:** - False

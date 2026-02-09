@@ -1,0 +1,225 @@
+# Problem: The Beacon Ledger of Aether
+
+In the kingdom of Aether there are **n beacons** connected by **m stone paths**. The royal librarian is reconstructing an ancient ledger that assigns each beacon a **unique activation rank** from **1 to n** (each rank used exactly once).
+
+Every stone path comes with a cryptic note:
+
+- for a path described as `(u, v, w)`, the ledger must satisfy
+
+\[
+\text{rank}[v] - \text{rank}[u] = w
+\]
+
+The path is physically undirected, but the note fixes the subtraction direction exactly as written.
+
+Your task is to decide whether such a ledger exists.  
+If it exists, output the ranks for all beacons. Otherwise output `-1`.
+
+It is guaranteed that the path network is **connected**.  
+It can be shown that if a valid ledger exists, it is **unique**.
+
+---
+
+## Input Format
+- First line: two integers `n, m`  
+  \((2 \le n \le 2\cdot10^5,\; n-1 \le m \le 2\cdot10^5)\)
+- Next `m` lines: three integers `u v w` meaning  
+  \(\text{rank}[v] - \text{rank}[u] = w\)  
+  \((1 \le u,v \le n,\; -10^9 \le w \le 10^9)\)
+
+---
+
+## Output Format
+- Print `-1` if no valid ledger exists.
+- Otherwise print `n` integers: `rank[1] rank[2] ... rank[n]`.
+
+---
+
+## Sample Tests
+
+### Sample 1
+**Input**
+```
+4 3
+1 2 1
+2 3 1
+3 4 1
+```
+**Output**
+```
+1 2 3 4
+```
+
+### Sample 2
+**Input**
+```
+3 3
+1 2 1
+2 3 1
+1 3 1
+```
+**Output**
+```
+-1
+```
+
+### Sample 3
+**Input**
+```
+3 2
+1 2 2
+2 3 2
+```
+**Output**
+```
+-1
+```
+
+---
+
+# Editorial
+
+## 1) Turn the notes into “relative positions”
+Each note
+\[
+\text{rank}[v] - \text{rank}[u] = w
+\]
+is equivalent to
+\[
+\text{rank}[v] = \text{rank}[u] + w
+\]
+
+Because the graph is connected, once we know one beacon’s value, all others are forced—**unless** we meet a contradiction on a cycle.
+
+So we compute auxiliary values `s[i]` (“shadow ranks”) such that:
+- set `s[1] = 0`
+- for every constraint `(u, v, w)` we enforce `s[v] = s[u] + w`
+
+Implementation trick: store each input `(u, v, w)` as two directed edges:
+- `u -> v` with `+w`
+- `v -> u` with `-w`
+
+Then do BFS/DFS:
+- if `s[v]` is unset, set it to `s[u] + w`
+- if it is set but differs from `s[u] + w`, the notes contradict ⇒ answer is `-1`
+
+This step is `O(n+m)`.
+
+---
+
+## 2) All real solutions differ by a global shift
+If the constraints are consistent, any real ledger must look like:
+\[
+\text{rank}[i] = s[i] + X
+\]
+for some integer constant `X` (same for all `i`), because the constraints only fix differences.
+
+---
+
+## 3) Enforce “ranks are exactly 1..n”
+We need `{rank[i]}` to be exactly `{1,2,...,n}`.
+
+Since adding `X` doesn’t change which values are equal to each other:
+- All `rank[i]` distinct  ⇔  all `s[i]` distinct.
+
+Also, if `{s[i] + X}` equals `{1..n}`, then the smallest becomes 1 and the largest becomes n, so:
+\[
+(\max s + X) - (\min s + X) = n - 1
+\Rightarrow \max s - \min s = n - 1
+\]
+
+### Necessary and sufficient conditions
+A valid ledger exists **iff**:
+1. constraints are consistent (BFS/DFS check),
+2. all `s[i]` are distinct,
+3. `max(s) - min(s) == n - 1`.
+
+Why sufficient?  
+If `n` distinct integers fit inside an interval of length `n-1`, they must be **exactly consecutive**.  
+So the set `{s[i]}` must be:
+\[
+\{\min s, \min s + 1, ..., \min s + (n-1)\}
+\]
+Then the only shift that maps it to `{1..n}` is:
+\[
+X = 1 - \min s
+\]
+and we output:
+\[
+\text{rank}[i] = s[i] - \min s + 1
+\]
+This also explains the promised uniqueness.
+
+---
+
+## Complexity
+- Building + BFS/DFS: `O(n+m)`
+- Distinctness + min/max: `O(n)`
+- Memory: `O(n+m)`
+
+---
+
+# Reference Implementation (Python 3)
+
+```python
+import sys
+from collections import deque
+
+def solve() -> None:
+    data = sys.stdin.buffer.read().split()
+    n = int(data[0])
+    m = int(data[1])
+
+    adj = [[] for _ in range(n + 1)]
+    idx = 2
+    for _ in range(m):
+        u = int(data[idx]); v = int(data[idx + 1]); w = int(data[idx + 2])
+        idx += 3
+        # rank[v] - rank[u] = w  =>  s[v] = s[u] + w
+        adj[u].append((v, w))
+        adj[v].append((u, -w))
+
+    s = [None] * (n + 1)
+    s[1] = 0
+    q = deque([1])
+
+    # Consistency check + compute shadow ranks
+    while q:
+        u = q.popleft()
+        su = s[u]
+        for v, w in adj[u]:
+            expected = su + w
+            if s[v] is None:
+                s[v] = expected
+                q.append(v)
+            else:
+                if s[v] != expected:
+                    sys.stdout.write("-1")
+                    return
+
+    # Connected is guaranteed; still safe-guard:
+    if any(s[i] is None for i in range(1, n + 1)):
+        sys.stdout.write("-1")
+        return
+
+    vals = s[1:]
+    mn = min(vals)
+    mx = max(vals)
+
+    # Must occupy exactly a length-(n-1) interval and be all distinct
+    if mx - mn != n - 1:
+        sys.stdout.write("-1")
+        return
+    if len(set(vals)) != n:
+        sys.stdout.write("-1")
+        return
+
+    shift = 1 - mn
+    ranks = [x + shift for x in vals]  # becomes a permutation of 1..n
+
+    sys.stdout.write(" ".join(map(str, ranks)))
+
+if __name__ == "__main__":
+    solve()
+```
+

@@ -1,0 +1,57 @@
+Let's p\[1\]=x. Thus, p\[2\]=p\[1\]+(p\[2\]−p\[1\])=x+q\[1\], p\[3\]=p\[1\]+(p\[2\]−p\[1\])+(p\[3\]−p\[2\])=x+q\[1\]+q\[2\], ..., p\[n\]=p\[1\]+(p\[2\]−p\[1\])+(p\[3\]−p\[2\])+⋯+(p\[n\]−p\[n−1\])=x+q\[1\]+q\[2\]+⋯+q\[n−1\].
+
+It means that the sequence of n partial sums p′=\[0,q\[1\],q\[1\]+q\[2\],…,q\[1\]+q\[2\]+⋯+q\[n−1\]\] is the required permutation if we do +x to each element. The value of x is unknown yet.
+
+Find such i that p′\[i\] is minimum. Thus, x=1−p′\[i\]. Exactly this value will change p′\[i\] to be 1 after you add x. So, add x to each element of p′ and check that now it is a permutation.
+
+Probably, you need to use long long to avoid possible integer overflows.
+
+**Code**
+
+```cpp
+#include <bits/stdc++.h>
+
+#define ll long long
+#define pb push_back
+
+using namespace std;
+
+ll n, a[200100], b[200100], used[200100];
+
+int main()
+{
+    ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0);
+
+    cin >> n;
+    for(int i = 1; i < n; ++i){
+        cin >> a[i];
+    }
+
+    b[0] = 1;
+    ll mn = 200100;
+    for(int i = 1; i < n; ++i){
+        b[i] = b[i-1] + a[i];
+        mn = min(mn, b[i]);
+    }
+
+    if(mn <= 0){
+        for(int i = 0; i < n; ++i){
+            b[i] += abs(mn) + 1;
+        }
+    }
+    for(int i = 0; i < n; ++i){
+        if(b[i] <= n && used[b[i]] == 0){
+                used[b[i]] = 1;
+            }
+            else{
+                cout << -1;
+                return 0;
+            }
+    }
+    for(int i = 0; i < n; ++i){
+        cout << b[i] << ' ';
+    }
+    return 0;
+}
+
+```

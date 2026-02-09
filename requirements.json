@@ -1,0 +1,16 @@
+{
+  "original": "https://www.codeforces.com/problemset/problem/1141/C",
+  "title": "Beacon Rank Ledger",
+  "tags": [
+    "Graph Algorithms",
+    "Graphs and Networks",
+    "Stacks and Queues",
+    "Hash Tables",
+    "Algorithm Complexity and Big O Notation"
+  ],
+  "model_breaking": false,
+  "time": 1,
+  "space": 128,
+  "new_colab_link": "https://colab.research.google.com/drive/1ENWzBqpmusns7UUNz2b_QxaNpiJGZB8f",
+  "github_link": "https://github.com/MSFT-Codeforces/beacon_rank_ledger"
+}

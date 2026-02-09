@@ -1,0 +1,55 @@
+### 1) Input range boundaries (min/max)
+
+- **Smallest instance**: `n=2, m=1`.
+  - Only satisfiable when the implied difference is `rank[2]-rank[1]=±1` (up to relabeling of vertices); `w=0` or `|w|>1` must be impossible because ranks must be `{1,2}`.
+- **Largest instance**: `n=2e5, m=2e5` to enforce time/memory limits.
+- **Extreme weights**: `w = ±1e9` on long paths so accumulated values reach about `2e14`, catching 32-bit overflow.
+
+---
+
+### 2) Structural edge cases
+
+- **Acyclic vs cyclic structure**
+  - If the underlying constraint graph is truly **acyclic** (a simple tree), then there is no cycle-consistency constraint to check; any assignment of “potentials” is consistent up to a global shift, and only the permutation requirement can fail.
+  - If the input may include **multi-edges/self-loops**, then even with `m=n-1` you can still have cycles (length 1 via self-loop, length 2 via parallel edges), so cycle consistency must still be validated.
+- **Long chain (path graph)**: stresses recursion depth (stack overflow) and big accumulated sums.
+- **Star graph**: stresses high-degree node handling.
+- **Multiple edges between same vertices**
+  - Same ordered pair `(u,v)` must have identical `w` to be consistent.
+  - If edges appear as both `(u,v,w1)` and `(v,u,w2)`, they are consistent iff `w1 = -w2`. This catches direction/sign handling bugs.
+- **Self-loops** (not forbidden by constraints as stated)
+  - `(u=u, w=0)` is harmless; `(u=u, w≠0)` must force `-1`.
+- **Constraints implying equal ranks**
+  - Even if the difference equations are internally consistent, they may force `rank[a]=rank[b]` for `a≠b`, which violates the “permutation” requirement. Many solutions forget to enforce distinctness.
+
+---
+
+### 3) Stress conditions / worst-case patterns
+
+- **Many cycles, one bad edge**: mostly consistent graph with a single contradictory edge; catches solvers that don’t re-check constraints on already-visited nodes.
+- **Near-max edges (`m≈2e5`)**: stresses adjacency iteration and cycle checks on lots of constraints.
+- **Alternating huge ±w along a long path**: stresses overflow and sign errors.
+- **Permutation feasibility at scale**
+  - Large instances where the computed values are distinct but their range is **just** `n-1` (valid after shifting) vs **just** `n` (invalid). This targets off-by-one in min/max logic.
+
+---
+
+### 4) Common implementation mistakes to target
+
+- **Directionality/sign error**
+  - Correct propagation uses: from `u` to `v` add `+w`; from `v` to `u` add `-w` (since the original equation implies the reverse difference too). Storing `w` in both directions is wrong and should be exposed by tests.
+- **Integer overflow**
+  - Need 64-bit (`long long`) for accumulated potentials; `int` can overflow with `n·|w|`.
+- **Incorrect “shift to permutation” logic**
+  - Difference constraints determine ranks only up to an additive constant (if consistent). A valid permutation exists iff the multiset of potentials can be shifted to exactly `{1..n}`.
+  - Practically: after computing potentials, you must ensure all are distinct and `maxPotential - minPotential = n-1`; then shifting by `1 - minPotential` yields `{1..n}`. Off-by-one mistakes here are common.
+- **Only checking equation consistency, not permutation**
+  - Some solutions output any integer solution to the difference constraints, ignoring the requirement that ranks must be exactly `1..n`.
+- **Recursive DFS on deep graphs**
+  - Path graphs of length `2e5` can crash recursive implementations; iterative traversal tests are important.
+
+---
+
+### 5) Invalid input (only if applicable)
+
+The statement guarantees connectivity and vertex ranges, so “invalid input” isn’t a focus. However, since it does **not** explicitly forbid them, including **self-loops and parallel edges** is valuable—they are valid under the given constraints and frequently break assumptions in solutions.

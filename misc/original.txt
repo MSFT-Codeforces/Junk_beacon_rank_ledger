@@ -1,0 +1,104 @@
+**Problem Statement**
+An array of integers \(p_1, p_2, \dots, p_n\) is called a permutation if it contains each number from \(1\) to \(n\) exactly once.
+
+Polycarp once invented a permutation \(p_1, p_2, \dots, p_n\) of length \(n\), but he forgot it. The only thing he remembers is an array \(q_1, q_2, \dots, q_{n-1}\) where
+\[
+q_i = p_{i+1} - p_i \quad (1 \le i \le n-1).
+\]
+
+Given \(n\) and the array \(q\), restore any permutation \(p\) that matches these differences, or determine that it is impossible.
+
+**Input Format**
+- The first line contains an integer \(n\) \((2 \le n \le 2 \cdot 10^5)\) — the length of the permutation.
+- The second line contains \(n-1\) integers \(q_1, q_2, \dots, q_{n-1}\) \((-n < q_i < n)\).
+
+**Output Format**
+- Print `-1` if there is no permutation \(p\) of length \(n\) such that \(q_i = p_{i+1} - p_i\).
+- Otherwise, print \(p_1, p_2, \dots, p_n\). If multiple answers exist, print any of them.
+
+**Examples**
+Sample Input 1
+```
+3
+-2 1
+```
+Sample Output 1
+```
+3 1 2
+```
+
+Sample Input 2
+```
+5
+1 1 1 1
+```
+Sample Output 2
+```
+1 2 3 4 5
+```
+
+Sample Input 3
+```
+4
+-1 2 2
+```
+Sample Output 3
+```
+-1
+```
+
+**Editorial**
+Assume \(p_1 = x\). Then:
+- \(p_2 = x + q_1\)
+- \(p_3 = x + q_1 + q_2\)
+- \(\dots\)
+- \(p_n = x + q_1 + q_2 + \cdots + q_{n-1}\)
+
+So the values of \(p\) are obtained from the prefix sums of \(q\), shifted by the same constant \(x\).
+
+We can build an array \(b\) as follows:
+- Set \(b_0 = 1\)
+- For \(i = 1 \dots n-1\): \(b_i = b_{i-1} + q_i\)
+
+If some values become non-positive, we can shift the entire array upward so that the minimum becomes \(1\). Let \(m = \min(b)\). If \(m \le 0\), add \((1 - m)\) to every element of \(b\).
+
+After that, we just verify whether the resulting array contains each number from \(1\) to \(n\) exactly once:
+- every value must be in \([1, n]\)
+- all values must be distinct
+
+If the check passes, the array is a valid restored permutation; otherwise, output `-1`.
+
+(Use 64-bit integers in languages with overflow; Python integers are safe.)
+
+**Code**
+```python
+import sys
+
+def main() -> None:
+    data = list(map(int, sys.stdin.buffer.read().split()))
+    n = data[0]
+    q = data[1:]
+
+    b = [0] * n
+    b[0] = 1
+    for i in range(1, n):
+        b[i] = b[i - 1] + q[i - 1]
+
+    mn = min(b)
+    if mn <= 0:
+        shift = 1 - mn
+        for i in range(n):
+            b[i] += shift
+
+    used = [False] * (n + 1)
+    for x in b:
+        if x < 1 or x > n or used[x]:
+            sys.stdout.write("-1")
+            return
+        used[x] = True
+
+    sys.stdout.write(" ".join(map(str, b)))
+
+if __name__ == "__main__":
+    main()
+```

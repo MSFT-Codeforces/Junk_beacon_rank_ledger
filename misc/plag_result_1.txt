@@ -1,0 +1,14 @@
+- **AtCoder ABC087 D — “People on a Line”** ([atcoder.jp](https://atcoder.jp/contests/abc087/tasks/arc090_b))  
+  ```text
+  https://atcoder.jp/contests/abc087/tasks/arc090_b
+  ```
+
+- **HDU 3038 — “How Many Answers Are Wrong”** ([vjudge.net](https://vjudge.net/problem/HDU-3038))  
+  ```text
+  https://vjudge.net/problem/HDU-3038
+  ```
+
+- **BOJ 3830 — “교수님은 기다리지 않는다” (Professor Doesn’t Wait)** ([littlesam95.tistory.com](https://littlesam95.tistory.com/entry/BOJPlatinum-3-%EB%B0%B1%EC%A4%80-3830-%EA%B5%90%EC%88%98%EB%8B%98%EC%9D%80-%EA%B8%B0%EB%8B%A4%EB%A6%AC%EC%A7%80-%EC%95%8A%EB%8A%94%EB%8B%A4C?utm_source=openai))  
+  ```text
+  https://www.acmicpc.net/problem/3830
+  ```

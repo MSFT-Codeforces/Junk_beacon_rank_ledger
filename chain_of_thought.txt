@@ -1,0 +1,219 @@
+**[section_01]**
+Restate the task as exact mathematical requirements and clarify terminology, without proposing any solving strategy.
+
+**[atomic_01_01]**
+There are $n$ beacons (vertices) and $m$ stone paths (edges). The underlying graph is undirected and connected, meaning every beacon is reachable from every other beacon through some sequence of paths.
+
+**[atomic_01_02]**
+We must assign each beacon an integer activation rank, denoted $\text{rank}[i]$ for beacon $i$. The ranks must be a bijection onto $\{1,2,\dots,n\}$, i.e., every number from $1$ to $n$ appears exactly once among the ranks.
+
+**[atomic_01_03]**
+Each input line $(u, v, w)$ represents a constraint with a fixed direction in the subtraction:
+$$
+\text{rank}[v] - \text{rank}[u] = w.
+$$
+Even though the path is undirected, the equation is not symmetric; swapping $u$ and $v$ changes the meaning.
+
+**[atomic_01_04]**
+All $m$ constraints must hold simultaneously. If there are multiple constraints involving the same beacons (including duplicates), all of them must be satisfied at the same time by the single final rank assignment.
+
+**[atomic_01_05]**
+The output is either `-1` if no assignment exists, or a list of $n$ integers:
+$$
+\text{rank}[1]\ \text{rank}[2]\ \dots\ \text{rank}[n].
+$$
+The order of printing is fixed by beacon index.
+
+**[atomic_01_06]**
+A special guarantee is provided: if a valid assignment exists, it is unique. This means there cannot be two different permutations of $\{1,\dots,n\}$ that both satisfy all constraints.
+
+---
+
+**[section_02]**
+List important test scenarios and edge cases that must be handled correctly, focusing on expected feasibility and outcomes rather than methods.
+
+**[atomic_02_01]**
+Simple chain constraints: for example, $(1,2,1)$, $(2,3,1)$, $(3,4,1)$. These imply ranks that increase by $1$ along the chain, and the instance should be feasible if it can be shifted into exactly $\{1,\dots,n\}$.
+
+**[atomic_02_02]**
+Contradictory cycle: constraints may form a cycle whose implied net difference is nonzero. In such cases, the instance is impossible and the output must be `-1`.
+
+**[atomic_02_03]**
+Consistent differences but not a permutation: constraints can be internally consistent while forcing values that cannot become exactly $\{1,\dots,n\}$ under any global shift. Example pattern: differences of $2$ along a path force values spaced out like $\{0,2,4\}$ up to shifting, which cannot equal $\{1,2,3\}$.
+
+**[atomic_02_04]**
+Negative and large weights: $w$ can be as small as $-10^9$ and as large as $10^9$. Feasible instances may require intermediate values far outside $[1,n]$ before any normalization; infeasible instances may also arise from extreme weights.
+
+**[atomic_02_05]**
+Parallel edges: two or more constraints between the same pair of vertices can either agree (reinforce the same difference) or disagree (make the system impossible). Both possibilities must be supported.
+
+**[atomic_02_06]**
+Self-loops: if an input line has $u=v$, then the constraint becomes $0=w$. Therefore, any self-loop with $w \ne 0$ makes the instance impossible.
+
+**[atomic_02_07]**
+Minimum size: $n=2$ with a single constraint $(1,2,w)$. Only two permutations exist, and feasibility depends on whether the constraint matches either $(1,2)$ ranks or $(2,1)$ ranks.
+
+---
+
+**[section_03]**
+Implement brute-force permutation checking as a baseline and identify why it is computationally impossible.
+
+**[atomic_03_01]**
+A direct approach is to enumerate every permutation of $\{1,2,\dots,n\}$ as a candidate rank assignment, then verify all constraints by checking whether
+$$
+\text{rank}[v] - \text{rank}[u] = w
+$$
+holds for every edge line $(u,v,w)$.
+
+**[atomic_03_02]**
+This is conceptually straightforward because it matches the definition exactly: the ranks must be a permutation and must satisfy every constraint. If a solution exists, it will be found by exhaustive search.
+
+**[atomic_03_03]**
+The number of permutations is $n!$, and checking one permutation costs $O(m)$ time, so total time is $O(n! \cdot m)$. With $n$ up to $2 \cdot 10^5$, this is not just slow but entirely infeasible.
+
+**[atomic_03_04]**
+Even with pruning, worst-case inputs can delay contradictions until late, and the factorial search space remains the fundamental blocker. This forces a shift away from enumerating permutations toward exploiting the structure of difference constraints.
+
+*Complexity:* Time $O(n! \cdot m)$ (failed), Space $O(n)$ beyond input storage.
+
+---
+
+**[section_04]**
+Model constraints as a linear system and attempt general-purpose solving, then explain why it remains too slow and mismatched.
+
+**[atomic_04_01]**
+Each constraint $(u,v,w)$ is a linear equation:
+$$
+\text{rank}[v] - \text{rank}[u] = w.
+$$
+Collectively, the instance is a sparse system of $m$ equations over $n$ integer unknowns.
+
+**[atomic_04_02]**
+A general approach would be to solve the linear system using Gaussian elimination (or a similar technique) to detect inconsistency and compute values. However, classic elimination has time around $O(n^3)$ in dense form, which is impossible for $n=2 \cdot 10^5$.
+
+**[atomic_04_03]**
+Even if one tried to exploit sparsity, generic linear solvers are still complex and do not naturally incorporate the additional requirement that the solution must be exactly a permutation of $\{1,\dots,n\}$.
+
+**[atomic_04_04]**
+The equations represent differences along edges in a graph, which suggests there are graph-specific consistency properties (especially around cycles). A heavy algebraic tool fails to leverage this simple structure and wastes computation.
+
+**[atomic_04_05]**
+Therefore, linear-algebra solving is discarded because it is both too slow and not aligned with the graph nature of the constraints; we need a method that processes edges in near-linear time.
+
+*Complexity:* Time $O(n^3)$ (failed), Space $O(n^2)$ in dense form (failed).
+
+---
+
+**[section_05]**
+Use iterative edge relaxation to propagate values, then show why its worst-case time is still too large.
+
+**[atomic_05_01]**
+A more graph-like attempt is to pick an arbitrary base value for one vertex and iteratively propagate values using the rule implied by each edge:
+$$
+\text{rank}[v] = \text{rank}[u] + w.
+$$
+Unknown vertices become known as soon as an adjacent known vertex exists.
+
+**[atomic_05_02]**
+In this relaxation-style procedure, we repeatedly scan all $m$ constraints and apply implications whenever possible. If at any point a vertex is forced to take two different values, the instance is inconsistent.
+
+**[atomic_05_03]**
+The main weakness is that progress can be very slow in the worst case. On a long path, information may effectively move one step per full scan, requiring up to $n-1$ full scans of $m$ edges.
+
+**[atomic_05_04]**
+That yields worst-case time complexity $O(nm)$, which is too large for $n,m \le 2 \cdot 10^5$:
+$$
+nm \approx 4 \cdot 10^{10}.
+$$
+This fails typical time limits by a wide margin.
+
+**[atomic_05_05]**
+So although relaxation uses sparsity better than dense algebra, it still lacks a tight enough runtime bound. We need a single-pass traversal that assigns each vertex once and checks each edge a constant number of times.
+
+*Complexity:* Time $O(nm)$ (failed), Space $O(n+m)$.
+
+---
+
+**[section_06]**
+Compute consistent relative values via one graph traversal to detect contradictions in linear time.
+
+**[atomic_06_01]**
+We introduce auxiliary values $s[i]$ (relative or “shadow” values) meant to satisfy the same differences:
+$$
+s[v] - s[u] = w
+$$
+for every input constraint $(u,v,w)$. These values need not be within $[1,n]$; they represent relative positions.
+
+**[atomic_06_02]**
+To traverse an undirected edge while preserving the directed equation, each input constraint becomes two directed adjacency entries:
+- $u \to v$ with weight $+w$ (expect $s[v] = s[u] + w$),
+- $v \to u$ with weight $-w$ (expect $s[u] = s[v] - w$).
+This ensures both directions encode the same original constraint.
+
+**[atomic_06_03]**
+Because the graph is connected, we can anchor one vertex, e.g. set $s[1]=0$, and then perform BFS or DFS to assign values:
+when visiting $u$ and considering an outgoing entry $(v,w)$, the required value is $s[u]+w$.
+
+**[atomic_06_04]**
+If $v$ is unassigned, we assign $s[v]=s[u]+w$ and continue. If $v$ is already assigned but $s[v] \ne s[u]+w$, then the constraints contradict each other, and the correct output is `-1`.
+
+**[atomic_06_05]**
+This traversal processes each adjacency entry once, so each original edge is considered a constant number of times. Contradictions caused by cycles are detected naturally when traversal revisits an already-assigned vertex via an alternate path.
+
+*Complexity:* Time $O(n+m)$, Space $O(n+m)$.
+
+---
+
+**[section_07]**
+Convert the relative values into a permutation of $1$ to $n$ using necessary-and-sufficient checks.
+
+**[atomic_07_01]**
+After obtaining consistent shadow values $s[i]$, we observe that adding the same constant to all vertices preserves all differences. So any candidate rank assignment consistent with the constraints must look like:
+$$
+\text{rank}[i] = s[i] + X
+$$
+for some integer constant $X$.
+
+**[atomic_07_02]**
+The permutation requirement imposes two key restrictions that do not depend on $X$:
+1. All $\text{rank}[i]$ must be distinct, which holds if and only if all $s[i]$ are distinct.
+2. The set of ranks must be exactly $\{1,\dots,n\}$, which implies:
+$$
+\max(\text{rank}) - \min(\text{rank}) = n-1.
+$$
+Since shifting by $X$ does not change the range, this is equivalent to:
+$$
+\max(s) - \min(s) = n-1.
+$$
+
+**[atomic_07_03]**
+These conditions are sufficient as well. If $n$ integers are all distinct and lie within an interval of length $n-1$, then they must be exactly the consecutive set:
+$$
+\{\min(s), \min(s)+1, \dots, \min(s)+n-1\}.
+$$
+So there exists exactly one shift that maps them onto $\{1,\dots,n\}$.
+
+**[atomic_07_04]**
+The required shift is forced:
+$$
+X = 1 - \min(s),
+$$
+and the final output ranks become:
+$$
+\text{rank}[i] = s[i] - \min(s) + 1.
+$$
+This aligns with the uniqueness guarantee: the shift is determined uniquely by the minimum.
+
+**[atomic_07_05]**
+So we validate in this order:
+- compute $mn=\min_i s[i]$ and $mx=\max_i s[i]$,
+- reject if $mx-mn \ne n-1$,
+- reject if the values $s[1],\dots,s[n]$ are not all distinct,
+- otherwise print $s[i]-mn+1$ for all $i$.
+
+**[atomic_07_06]**
+This final stage cleanly separates two kinds of failure:
+- contradiction in the difference constraints (caught during traversal),
+- consistency in differences but inability to match the exact set $\{1,\dots,n\}$ (caught by range and distinctness checks).
+
+*Overall complexity:* Time $O(n+m)$ for traversal plus $O(n)$ for min/max/distinct checks, Space $O(n+m)$.
