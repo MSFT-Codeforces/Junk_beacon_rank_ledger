@@ -1,4 +1,4 @@
-Time Limit: **1 seconds**
+Time Limit: **2 seconds**
 
 Memory Limit: **128 MB**
 
@@ -39,6 +39,7 @@ Otherwise, print $n$ integers: $\text{rank}[1]\ \text{rank}[2]\ \dots\ \text{ran
 - $1 \le u, v \le n$
 - $-10^9 \le w \le 10^9$
 - The given graph is connected.
+
 **Examples:-**
  - **Input:**
 ```
