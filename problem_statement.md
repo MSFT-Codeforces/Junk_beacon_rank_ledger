@@ -1,5 +1,3 @@
-**Beacon Rank Ledger**
-
 Time Limit: **1 seconds**
 
 Memory Limit: **128 MB**

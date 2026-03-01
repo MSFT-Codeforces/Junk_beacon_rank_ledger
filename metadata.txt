@@ -7,3 +7,4 @@
 **Number of Approaches:** - 4, ($O(n!\cdot m)$ -> $O(n^3)$ -> $O(nm)$ -> $O(n+m)$)
 **Number of Chains:** - 7
 **Model-Breaking:** - False
+**GitHub:** - https://github.com/MSFT-Codeforces/Junk_beacon_rank_ledger
