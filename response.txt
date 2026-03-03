@@ -1,49 +1,16 @@
-**1. Problem Understanding**
+We need to assign each beacon a distinct rank from $1$ to $n$ so that every constraint $\text{rank}[v]-\text{rank}[u]=w$ holds. The graph is connected, and when a valid assignment exists it is unique. Otherwise we output $-1$.
 
-We must assign each vertex an integer rank so that:
+**What we are solving**
 
-- The ranks form a permutation of $\{1,2,\dots,n\}$ (each value used exactly once).
-- Every constraint line $(u, v, w)$ is satisfied with the fixed direction:
-$$
-\text{rank}[v] - \text{rank}[u] = w.
-$$
+The ranks must form a permutation of $\{1,2,\dots,n\}$. Each edge $(u,v,w)$ fixes the difference $\text{rank}[v]-\text{rank}[u]=w$. Because the equations only determine relative values up to an additive constant, the permutation requirement pins down at most one solution. We either find that unique assignment or report that none exists.
 
-The graph is connected. When a valid assignment exists, the distinctness and range conditions force exactly one shift; output that unique assignment or $-1$.
+**Approach**
 
+We treat each constraint as a directed implication: from $u$ to $v$ with delta $+w$, and from $v$ to $u$ with delta $-w$. Starting from vertex $1$ with a value of $0$, we run BFS and propagate values along edges. If we ever reach a vertex that already has a different implied value, the constraints are inconsistent and we return $-1$.
 
----
+When the constraints are consistent, any valid rank assignment has the form $\text{rank}[i]=s[i]+X$ for some constant $X$. To get a permutation of $\{1,\dots,n\}$, we need all $s[i]$ distinct and $\max(s)-\min(s)=n-1$. If both hold, the shift $X=1-\min(s)$ gives $\text{rank}[i]=s[i]-\min(s)+1$, which is the unique valid output.
 
-**2. Optimal Approach**
-
-1. **Represent constraints as directed implications.**  
-   From $\text{rank}[v]-\text{rank}[u]=w$, we derive:
-   - $u \to v$ with delta $+w$
-   - $v \to u$ with delta $-w$
-
-2. **Compute consistent relative values with BFS.**  
-   Compute shadow values $s[i]$ with an arbitrary anchor $s[1]=0$.  
-   While traversing edges, enforce $s[v]=s[u]+\Delta$. If a vertex is reached with a conflicting required value, the constraints are inconsistent and the answer is `-1`.
-
-3. **Use the global-shift property.**  
-   If constraints are consistent, any solution must be:
-   $$
-   \text{rank}[i] = s[i] + X
-   $$
-   for some integer constant $X$.
-
-4. **Check if a shift can make ranks exactly $\{1,\dots,n\}$.**  
-   This is possible iff:
-   - all $s[i]$ are distinct, and
-   - $\max(s)-\min(s)=n-1$.
-
-   Then the unique shift is $X=1-\min(s)$ and:
-   $$
-   \text{rank}[i]=s[i]-\min(s)+1.
-   $$
-
----
-
-**3. Code**
+**Solution**
 ```python
 import sys
 from collections import deque
@@ -183,47 +150,12 @@ if __name__ == "__main__":
     main()
 ```
 
----
+**How it works**
 
-**4. Code Explanation**
+The code builds an adjacency list where each constraint $(u,v,w)$ adds $(v,w)$ to $u$ and $(u,-w)$ to $v$. That way, when we traverse from a vertex with value $s[u]$, we enforce $s[v]=s[u]+w$ for each neighbor. The BFS starts at vertex $1$ with value $0$. For each unvisited neighbor we assign the implied value; for each already-visited neighbor we check that the implied value matches. A mismatch means the constraints contradict and we return $-1$.
 
-- The program builds `adjacency_list` where each input constraint $(u,v,w)$ adds:
-  - `(v, w)` to `adjacency_list[u]`
-  - `(u, -w)` to `adjacency_list[v]`
-  so that traversing an entry `(neighbor_vertex, delta)` enforces
-  $s[\text{neighbor\_vertex}] = s[\text{current\_vertex}] + \text{delta}$.
+After BFS, we check that the shadow values span an interval of length $n-1$ and are all distinct. If so, we shift by $1-\min(s)$ and print the ranks. Otherwise we print $-1$.
 
-- `compute_shadow_values()` runs BFS from vertex `1` with `shadow_values[1] = 0`.
-  - If a neighbor is unvisited, it assigns the implied value and continues.
-  - If already visited, it checks whether the implied value matches; otherwise
-    constraints contradict and the function reports inconsistency.
+**Complexity**
 
-- If consistent, `main()` checks whether shadow values can be shifted to become
-  exactly $\{1,\dots,n\}$:
-  - `maximum_shadow - minimum_shadow` must equal `vertex_count - 1`
-  - all shadow values must be distinct
-
-- When both pass, it shifts by `shift = 1 - minimum_shadow` and prints the
-  resulting `ranks`.
-
----
-
-**5. Time and Space Complexity**
-
-- Building the adjacency list: time $O(m)$, space $O(n+m)$.
-- BFS traversal and consistency checking: time $O(n+m)$.
-- Computing min/max and checking distinctness: time $O(n)$.
-
-Overall:
-- **Time:** $O(n+m)$
-- **Space:** $O(n+m)$
-
----
-
-**6. Conclusion**
-
-We compute relative (shadow) values that satisfy all directed difference
-constraints using a single BFS, detect contradictions immediately, and then
-verify whether a global shift can transform these values into the permutation
-$\{1,\dots,n\}$. If yes, the shift is unique and we output the ranks;
-otherwise we output `-1`.
+Building the adjacency list takes $O(m)$ time and $O(n+m)$ space. The BFS runs in $O(n+m)$ time. The min, max, and distinctness checks are $O(n)$. Overall the solution runs in $O(n+m)$ time and uses $O(n+m)$ space.
