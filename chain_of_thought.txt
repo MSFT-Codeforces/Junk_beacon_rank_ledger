@@ -72,13 +72,13 @@ Even with pruning, worst-case inputs can delay contradictions until late, and th
 **[section_04]**
 Evaluate linear-system solving (enumeration is infeasible due to factorial growth).
 **[atomic_04_01]**
-Each constraint $(u,v,w)$ is a linear equation $\text{rank}[v] - \text{rank}[u] = w$. Collectively, a sparse system of $m$ equations over $n$ unknowns.
+Each constraint $(u,v,w)$ is a linear equation $\text{rank}[v] - \text{rank}[u] = w$. Collectively, a sparse system of $m$ equations over $n$ unknowns. The system has one degree of freedom (additive constant) if consistent.
 **[atomic_04_02]**
-Gaussian elimination can detect inconsistency and compute values. Dense elimination costs $O(n^3)$ time and $O(n^2)$ space. For $n=2\cdot 10^5$, $n^3\approx 8\cdot 10^{15}$ operations, far beyond typical limits.
+What tools can solve such a system? Gaussian elimination is a standard choice. Consider its cost: dense elimination requires $O(n^3)$ time and $O(n^2)$ space. For $n=2\cdot 10^5$, $n^3\approx 8\cdot 10^{15}$ operations.
 **[atomic_04_03]**
-Sparse solvers exist but are complex and do not naturally enforce the permutation requirement. The equations have graph structure (differences along edges); a generic algebraic tool does not exploit this.
+That cost is far beyond typical limits. Sparse solvers could reduce it, but they are complex to implement and do not naturally incorporate the permutation requirement. Moreover, the equations encode differences along graph edges; a generic algebraic solver ignores this structure.
 **[atomic_04_04]**
-Given the cubic cost and the mismatch with the permutation constraint, linear-algebra solving is not viable. A method that processes edges in near-linear time is needed.
+The analysis shows linear-algebra solving is not viable: too slow and misaligned with the problem structure. A method that processes edges in near-linear time and exploits graph structure is needed.
 
 *Complexity:* Time $O(n^3)$ (failed), Space $O(n^2)$ in dense form (failed).
 
@@ -112,7 +112,7 @@ Relaxation still lacks a tight enough runtime bound. A single-pass traversal tha
 **[section_06]**
 Compute relative values via single traversal (relaxation requires $O(nm)$ scans).
 **[atomic_06_01]**
-We introduce auxiliary values $s[i]$ (relative or “shadow” values) meant to satisfy the same differences:
+The constraints are difference equations along edges. We need values $s[i]$ (relative or “shadow” values) meant to satisfy the same differences:
 $$
 s[v] - s[u] = w
 $$
