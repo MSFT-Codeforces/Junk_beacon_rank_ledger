@@ -1,8 +1,3 @@
-"""
-Compute a permutation of ranks satisfying directed difference constraints
-on a connected graph, or print -1 if impossible.
-"""
-
 import sys
 from collections import deque
 

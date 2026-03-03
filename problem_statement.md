@@ -12,9 +12,9 @@ $$
 
 Note that the physical path is undirected, but the equation direction is fixed as written.
 
-Determine whether such an assignment exists. If it exists, output the ranks for all beacons; otherwise output `-1`.
+Determine whether such an assignment exists. If it exists, output the unique ranks for all beacons (in beacon index order); otherwise output `-1`.
 
-It can be shown that if a valid assignment exists, it is unique.
+The equations determine relative ranks up to an additive constant; the permutation requirement (exactly $\{1,\dots,n\}$) forces at most one valid shift. When a valid assignment exists, it is unique.
 
 **Input Format:-**
 
@@ -83,7 +83,7 @@ $$
 $$
 But in any permutation of $\{1,2,3,4,5,6\}$ we always have $|\text{rank}[6]-\text{rank}[1]|\le 5$, so these equations cannot be satisfied and the answer is "-1".
 
-In the first example, from the first five edges we get
+In the second example, from the first five edges we get
 $\text{rank}[2]=\text{rank}[1]-1,\ \text{rank}[3]=\text{rank}[1]-2,\dots,\text{rank}[6]=\text{rank}[1]-5$.
 The extra edges are consistent with this (for instance, $\text{rank}[3]-\text{rank}[1]=-2$, $\text{rank}[5]-\text{rank}[2]=-3$, and $\text{rank}[1]-\text{rank}[6]=5$).
 Choosing $\text{rank}[1]=6$ makes the ranks exactly a permutation of $\{1,2,3,4,5,6\}$, yielding:

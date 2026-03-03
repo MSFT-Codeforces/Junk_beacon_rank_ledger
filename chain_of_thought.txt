@@ -1,5 +1,5 @@
 **[section_01]**
-Restate the task as exact mathematical requirements and clarify terminology, without proposing any solving strategy.
+Restating task requirements and clarifying terminology.
 **[atomic_01_01]**
 There are $n$ beacons (vertices) and $m$ stone paths (edges). The underlying graph is undirected and connected, meaning every beacon is reachable from every other beacon through some sequence of paths.
 **[atomic_01_02]**
@@ -24,26 +24,24 @@ A special guarantee is provided: if a valid assignment exists, it is unique. Thi
 ---
 
 **[section_02]**
-List important test scenarios and edge cases that must be handled correctly, focusing on expected feasibility and outcomes rather than methods.
+Explaining the provided sample test cases and other edge cases.
 **[atomic_02_01]**
-Simple chain constraints: for example, $(1,2,1)$, $(2,3,1)$, $(3,4,1)$. These imply ranks that increase by $1$ along the chain, and the instance should be feasible if it can be shifted into exactly $\{1,\dots,n\}$.
+First example: $n=6$, $m=5$, chain edges $(1,2,10^9)$, $(2,3,10^9)$, $(3,4,10^9)$, $(4,5,10^9)$, $(5,6,10^9)$. Summing gives $\text{rank}[6]-\text{rank}[1]=5\cdot 10^9$. In any permutation of $\{1,\dots,6\}$, the maximum gap is $5$. So no valid assignment exists; output is $-1$.
 **[atomic_02_02]**
-Contradictory cycle: constraints may form a cycle whose implied net difference is nonzero. In such cases, the instance is impossible and the output must be `-1`.
+Second example: $n=6$, $m=8$. The first five edges form a chain with $w=-1$: $\text{rank}[2]=\text{rank}[1]-1$, $\text{rank}[3]=\text{rank}[1]-2$, $\dots$, $\text{rank}[6]=\text{rank}[1]-5$. The extra edges $(1,3,-2)$, $(2,5,-3)$, $(6,1,5)$ are consistent. Choosing $\text{rank}[1]=6$ yields $\text{rank}[1..6]=6,5,4,3,2,1$, a valid permutation. Output: 6 5 4 3 2 1.
 **[atomic_02_03]**
-Consistent differences but not a permutation: constraints can be internally consistent while forcing values that cannot become exactly $\{1,\dots,n\}$ under any global shift. Example pattern: differences of $2$ along a path force values spaced out like $\{0,2,4\}$ up to shifting, which cannot equal $\{1,2,3\}$.
+Contradictory cycle: constraints may form a cycle whose implied net difference is nonzero. In such cases the instance is impossible and output must be $-1$.
 **[atomic_02_04]**
-Negative and large weights: $w$ can be as small as $-10^9$ and as large as $10^9$. Feasible instances may require intermediate values far outside $[1,n]$ before any normalization; infeasible instances may also arise from extreme weights.
+Consistent differences but not a permutation: constraints can be internally consistent while forcing values that cannot become exactly $\{1,\dots,n\}$ under any global shift (e.g., differences of $2$ along a path force values like $\{0,2,4\}$ up to shifting, which cannot equal $\{1,2,3\}$).
 **[atomic_02_05]**
-Parallel edges: two or more constraints between the same pair of vertices can either agree (reinforce the same difference) or disagree (make the system impossible). Both possibilities must be supported.
+Negative and large weights: $w$ can be $-10^9$ to $10^9$. Feasible instances may require intermediate values far outside $[1,n]$ before normalization.
 **[atomic_02_06]**
-Self-loops: if an input line has $u=v$, then the constraint becomes $0=w$. Therefore, any self-loop with $w \ne 0$ makes the instance impossible.
-**[atomic_02_07]**
-Minimum size: $n=2$ with a single constraint $(1,2,w)$. Only two permutations exist, and feasibility depends on whether the constraint matches either $(1,2)$ ranks or $(2,1)$ ranks.
+Parallel edges between the same pair can agree or disagree; self-loops with $u=v$ and $w\ne 0$ make the instance impossible; $n=2$ with one constraint has only two permutations to check.
 
 ---
 
 **[section_03]**
-Implement brute-force permutation checking as a baseline and identify why it is computationally impossible.
+Attempting brute-force permutation enumeration.
 **[atomic_03_01]**
 A direct approach is to enumerate every permutation of $\{1,2,\dots,n\}$ as a candidate rank assignment, then verify all constraints by checking whether
 $$
@@ -62,7 +60,7 @@ Even with pruning, worst-case inputs can delay contradictions until late, and th
 ---
 
 **[section_04]**
-Model constraints as a linear system and attempt general-purpose solving, then explain why it remains too slow and mismatched.
+Attempting linear-system solving for the constraint equations.
 **[atomic_04_01]**
 Each constraint $(u,v,w)$ is a linear equation:
 $$
@@ -83,9 +81,9 @@ Therefore, linear-algebra solving is discarded because it is both too slow and n
 ---
 
 **[section_05]**
-Use iterative edge relaxation to propagate values, then show why its worst-case time is still too large.
+Attempting iterative edge relaxation to propagate values.
 **[atomic_05_01]**
-A more graph-like attempt is to pick an arbitrary base value for one vertex and iteratively propagate values using the rule implied by each edge:
+Pick an arbitrary base value for one vertex and iteratively propagate values using the rule implied by each edge:
 $$
 \text{rank}[v] = \text{rank}[u] + w.
 $$
@@ -101,14 +99,14 @@ nm \approx 4 \cdot 10^{10}.
 $$
 This fails typical time limits by a wide margin.
 **[atomic_05_05]**
-So although relaxation uses sparsity better than dense algebra, it still lacks a tight enough runtime bound. We need a single-pass traversal that assigns each vertex once and checks each edge a constant number of times.
+Relaxation still lacks a tight enough runtime bound. A single-pass traversal that assigns each vertex once and checks each edge a constant number of times would be preferable.
 
 *Complexity:* Time $O(nm)$ (failed), Space $O(n+m)$.
 
 ---
 
 **[section_06]**
-Compute consistent relative values via one graph traversal to detect contradictions in linear time.
+Computing relative values via a single graph traversal.
 **[atomic_06_01]**
 We introduce auxiliary values $s[i]$ (relative or “shadow” values) meant to satisfy the same differences:
 $$
@@ -133,7 +131,7 @@ This traversal processes each adjacency entry once, so each original edge is con
 ---
 
 **[section_07]**
-Convert the relative values into a permutation of $1$ to $n$ using necessary-and-sufficient checks.
+Converting relative values to a permutation of $\{1,\dots,n\}$.
 **[atomic_07_01]**
 After obtaining consistent shadow values $s[i]$, we observe that adding the same constant to all vertices preserves all differences. So any candidate rank assignment consistent with the constraints must look like:
 $$
