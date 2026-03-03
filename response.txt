@@ -8,7 +8,8 @@ $$
 \text{rank}[v] - \text{rank}[u] = w.
 $$
 
-The graph is connected. If a valid assignment exists, it is unique; otherwise we output `-1`.
+The graph is connected. When a valid assignment exists, the distinctness and range conditions force exactly one shift; output that unique assignment or $-1$.
+
 
 ---
 

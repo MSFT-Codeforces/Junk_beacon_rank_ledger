@@ -1,5 +1,5 @@
 **[section_01]**
-Restating task requirements and clarifying terminology.
+Analyze task requirements and clarify terminology.
 **[atomic_01_01]**
 There are $n$ beacons (vertices) and $m$ stone paths (edges). The underlying graph is undirected and connected, meaning every beacon is reachable from every other beacon through some sequence of paths.
 **[atomic_01_02]**
@@ -24,26 +24,36 @@ A special guarantee is provided: if a valid assignment exists, it is unique. Thi
 ---
 
 **[section_02]**
-Explaining the provided sample test cases and other edge cases.
+Analyzing sample test cases, edge cases, boundary cases, and corner cases.
 **[atomic_02_01]**
-First example: $n=6$, $m=5$, chain edges $(1,2,10^9)$, $(2,3,10^9)$, $(3,4,10^9)$, $(4,5,10^9)$, $(5,6,10^9)$. Summing gives $\text{rank}[6]-\text{rank}[1]=5\cdot 10^9$. In any permutation of $\{1,\dots,6\}$, the maximum gap is $5$. So no valid assignment exists; output is $-1$.
+Sample Example 1: $n=6$, $m=5$, chain $(1,2,10^9)$, $(2,3,10^9)$, $(3,4,10^9)$, $(4,5,10^9)$, $(5,6,10^9)$. Summing gives $\text{rank}[6]-\text{rank}[1]=5\cdot 10^9$. In any permutation of $\{1,\dots,6\}$, the maximum gap is $5$. No valid assignment; output $-1$.
 **[atomic_02_02]**
-Second example: $n=6$, $m=8$. The first five edges form a chain with $w=-1$: $\text{rank}[2]=\text{rank}[1]-1$, $\text{rank}[3]=\text{rank}[1]-2$, $\dots$, $\text{rank}[6]=\text{rank}[1]-5$. The extra edges $(1,3,-2)$, $(2,5,-3)$, $(6,1,5)$ are consistent. Choosing $\text{rank}[1]=6$ yields $\text{rank}[1..6]=6,5,4,3,2,1$, a valid permutation. Output: 6 5 4 3 2 1.
+Sample Example 2: $n=6$, $m=8$. First five edges form chain with $w=-1$: $\text{rank}[2]=\text{rank}[1]-1$, $\dots$, $\text{rank}[6]=\text{rank}[1]-5$. Extra edges $(1,3,-2)$, $(2,5,-3)$, $(6,1,5)$ are consistent. Choosing $\text{rank}[1]=6$ yields $6,5,4,3,2,1$. Output: 6 5 4 3 2 1.
 **[atomic_02_03]**
-Contradictory cycle: constraints may form a cycle whose implied net difference is nonzero. In such cases the instance is impossible and output must be $-1$.
+Edge case $n=2$: single constraint $(1,2,w)$. Only two permutations: ranks $(1,2)$ or $(2,1)$. Valid iff $w=1$ (first) or $w=-1$ (second).
 **[atomic_02_04]**
-Consistent differences but not a permutation: constraints can be internally consistent while forcing values that cannot become exactly $\{1,\dots,n\}$ under any global shift (e.g., differences of $2$ along a path force values like $\{0,2,4\}$ up to shifting, which cannot equal $\{1,2,3\}$).
+Edge case contradictory cycle: triangle $(1,2,1)$, $(2,3,1)$, $(3,1,1)$ implies $\text{rank}[1]-\text{rank}[1]=3$, impossible. Output $-1$.
 **[atomic_02_05]**
-Negative and large weights: $w$ can be $-10^9$ to $10^9$. Feasible instances may require intermediate values far outside $[1,n]$ before normalization.
+Edge case consistent but not permutation: path $(1,2,2)$, $(2,3,2)$ forces $\{0,2,4\}$ up to shift; cannot equal $\{1,2,3\}$. Output $-1$.
 **[atomic_02_06]**
-Parallel edges between the same pair can agree or disagree; self-loops with $u=v$ and $w\ne 0$ make the instance impossible; $n=2$ with one constraint has only two permutations to check.
+Edge case parallel edges: two constraints $(1,2,5)$ and $(1,2,5)$ agree; $(1,2,5)$ and $(1,2,3)$ disagree, impossible. Self-loop $(1,1,w)$ with $w\ne 0$ forces $0=w$, impossible.
+**[atomic_02_07]**
+Boundary case: $n=2\cdot 10^5$, $m=2\cdot 10^5$ (sparse connected graph). Solution must run in $O(n+m)$.
+**[atomic_02_08]**
+Boundary case: $w=\pm 10^9$. Shadow values can reach $\pm 10^{11}$; integer arithmetic must handle this. Range check $\max(s)-\min(s)=n-1$ still applies.
+**[atomic_02_09]**
+Corner case minimum: $n=2$, $m=1$ (tree). Single edge fully determines relative ranks; feasibility depends on $w\in\{1,-1\}$.
+**[atomic_02_10]**
+Corner case duplicate constraints: multiple identical $(u,v,w)$ edges. BFS sees same constraint repeatedly; no extra logic needed, consistency check suffices.
+**[atomic_02_11]**
+All these cases are handled by a single approach: BFS for consistency (catches contradictory cycles, self-loops, disagreeing parallel edges), then range and distinctness checks (catches consistent-but-not-permutation). No revision of the core strategy is needed for corner cases.
 
 ---
 
 **[section_03]**
-Attempting brute-force permutation enumeration.
+Evaluate brute-force permutation enumeration.
 **[atomic_03_01]**
-A direct approach is to enumerate every permutation of $\{1,2,\dots,n\}$ as a candidate rank assignment, then verify all constraints by checking whether
+Enumerate every permutation of $\{1,2,\dots,n\}$ as a candidate rank assignment, then verify all constraints by checking whether
 $$
 \text{rank}[v] - \text{rank}[u] = w
 $$
@@ -60,28 +70,22 @@ Even with pruning, worst-case inputs can delay contradictions until late, and th
 ---
 
 **[section_04]**
-Attempting linear-system solving for the constraint equations.
+Evaluate linear-system solving (enumeration is infeasible due to factorial growth).
 **[atomic_04_01]**
-Each constraint $(u,v,w)$ is a linear equation:
-$$
-\text{rank}[v] - \text{rank}[u] = w.
-$$
-Collectively, the instance is a sparse system of $m$ equations over $n$ integer unknowns.
+Each constraint $(u,v,w)$ is a linear equation $\text{rank}[v] - \text{rank}[u] = w$. Collectively, a sparse system of $m$ equations over $n$ unknowns.
 **[atomic_04_02]**
-A general approach would be to solve the linear system using Gaussian elimination (or a similar technique) to detect inconsistency and compute values. However, classic elimination has time around $O(n^3)$ in dense form, which is impossible for $n=2 \cdot 10^5$.
+Gaussian elimination can detect inconsistency and compute values. Dense elimination costs $O(n^3)$ time and $O(n^2)$ space. For $n=2\cdot 10^5$, $n^3\approx 8\cdot 10^{15}$ operations, far beyond typical limits.
 **[atomic_04_03]**
-Even if one tried to exploit sparsity, generic linear solvers are still complex and do not naturally incorporate the additional requirement that the solution must be exactly a permutation of $\{1,\dots,n\}$.
+Sparse solvers exist but are complex and do not naturally enforce the permutation requirement. The equations have graph structure (differences along edges); a generic algebraic tool does not exploit this.
 **[atomic_04_04]**
-The equations represent differences along edges in a graph, which suggests there are graph-specific consistency properties (especially around cycles). A heavy algebraic tool fails to leverage this simple structure and wastes computation.
-**[atomic_04_05]**
-Therefore, linear-algebra solving is discarded because it is both too slow and not aligned with the graph nature of the constraints; we need a method that processes edges in near-linear time.
+Given the cubic cost and the mismatch with the permutation constraint, linear-algebra solving is not viable. A method that processes edges in near-linear time is needed.
 
 *Complexity:* Time $O(n^3)$ (failed), Space $O(n^2)$ in dense form (failed).
 
 ---
 
 **[section_05]**
-Attempting iterative edge relaxation to propagate values.
+Evaluate iterative edge relaxation (linear algebra is too slow).
 **[atomic_05_01]**
 Pick an arbitrary base value for one vertex and iteratively propagate values using the rule implied by each edge:
 $$
@@ -106,7 +110,7 @@ Relaxation still lacks a tight enough runtime bound. A single-pass traversal tha
 ---
 
 **[section_06]**
-Computing relative values via a single graph traversal.
+Compute relative values via single traversal (relaxation requires $O(nm)$ scans).
 **[atomic_06_01]**
 We introduce auxiliary values $s[i]$ (relative or “shadow” values) meant to satisfy the same differences:
 $$
@@ -131,9 +135,9 @@ This traversal processes each adjacency entry once, so each original edge is con
 ---
 
 **[section_07]**
-Converting relative values to a permutation of $\{1,\dots,n\}$.
+Convert relative values to permutation of $\{1,\dots,n\}$.
 **[atomic_07_01]**
-After obtaining consistent shadow values $s[i]$, we observe that adding the same constant to all vertices preserves all differences. So any candidate rank assignment consistent with the constraints must look like:
+After obtaining consistent shadow values $s[i]$, adding the same constant to all vertices preserves all differences. Any valid rank assignment must have the form:
 $$
 \text{rank}[i] = s[i] + X
 $$

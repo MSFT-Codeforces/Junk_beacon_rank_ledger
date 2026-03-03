@@ -12,7 +12,7 @@ $$
 
 Note that the physical path is undirected, but the equation direction is fixed as written.
 
-Determine whether such an assignment exists. If it exists, output the unique ranks for all beacons (in beacon index order); otherwise output `-1`.
+Uniqueness: the equations determine relative ranks up to an additive constant. A valid assignment exists iff the computed values are all distinct and span an interval of length exactly $n-1$; then they form a consecutive set and exactly one shift maps them to $\{1,\dots,n\}$. The output is deterministic.
 
 The equations determine relative ranks up to an additive constant; the permutation requirement (exactly $\{1,\dots,n\}$) forces at most one valid shift. When a valid assignment exists, it is unique.
 
