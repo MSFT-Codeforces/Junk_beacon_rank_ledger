@@ -159,3 +159,7 @@ After BFS, we check that the shadow values span an interval of length $n-1$ and 
 **Complexity**
 
 Building the adjacency list takes $O(m)$ time and $O(n+m)$ space. The BFS runs in $O(n+m)$ time. The min, max, and distinctness checks are $O(n)$. Overall the solution runs in $O(n+m)$ time and uses $O(n+m)$ space.
+
+**Conclusion**
+
+Thus the BFS-based difference propagation correctly finds the unique permutation when it exists, or reports $-1$ otherwise, in $O(n+m)$ time.
